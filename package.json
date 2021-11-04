@@ -1,0 +1,23 @@
+{
+  "name": "patternlibrary",
+  "version": "1.0.0",
+  "description": "Design Patterns library",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Malamud-A/PatternLibrary.git"
+  },
+  "author": "Alex Malamud",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Malamud-A/PatternLibrary/issues"
+  },
+  "homepage": "https://github.com/Malamud-A/PatternLibrary#readme",
+  "dependencies": {
+    "ts-node": "^10.4.0",
+    "typescript": "^4.4.4"
+  }
+}
