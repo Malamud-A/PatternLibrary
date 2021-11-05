@@ -30,9 +30,9 @@ enum ROOF_TYPES {
 }
 
 const ROOF_TYPES_NAMES = {
-  GABLE: "gable",
-  FLAT: "flat",
-  HIPPED: "hipped"
+  [ROOF_TYPES.GABLE]: "gable",
+  [ROOF_TYPES.FLAT]: "flat",
+  [ROOF_TYPES.HIPPED]: "hipped"
 };
 
 enum INTERIOR_WEALTH {
@@ -72,6 +72,8 @@ enum AREA_STANDARTS {
   BASIC,
   SPACIOUS,
 }
+
+console.dir(AREA_STANDARTS);
 
 const AREA_STANDARTS_NAMES = {
   [AREA_STANDARTS.NARROW]: "narrow",
@@ -147,10 +149,10 @@ interface IHouseBuilder extends IBuilder<THouse> {
 
 
 class HouseBuilder implements IHouseBuilder {
-  private area: AREA_STANDARTS;
-  private wallsMaterial: WALL_MATERIALS;
-  private roofType: ROOF_TYPES;
-  private roofMaterial: ROOF_MATERIALS;
+  private area: AREA_STANDARTS | null;
+  private wallsMaterial: WALL_MATERIALS | null;
+  private roofType: ROOF_TYPES | null;
+  private roofMaterial: ROOF_MATERIALS | null;
   private price: number;
   private storeys: THouseStoreys;
   private rooms: Array<TRoom>;
@@ -161,6 +163,10 @@ class HouseBuilder implements IHouseBuilder {
     this.storeys = {};
     this.rooms = [];
     this.price = 0;
+    this.area = null;
+    this.wallsMaterial = null;
+    this.roofType = null;
+    this.roofMaterial = null;
 
     this.priceCalculator = new PriceCalculator();
   }
@@ -187,16 +193,16 @@ class HouseBuilder implements IHouseBuilder {
 
   public addStorey(): HouseBuilder {
     if (!this.area) {
-      throw new Error("Please, define the house area");
+      throw new Error('[HouseBuilder] Please, define the house area');
     }
 
     const storey: TStorey = {
-      space: AREA_STANDARTS_NAMES[this.area],
-      spaceLeft: BASE_AREA_MAP[this.area],
+      space: AREA_STANDARTS_NAMES[this.area as AREA_STANDARTS],
+      spaceLeft: BASE_AREA_MAP[this.area as AREA_STANDARTS],
       rooms: []
     };
 
-    if (!Object.keys(this.storeys).length) {
+    if (!Object.keys(this.storeys as THouseStoreys).length) {
       this.storeys[1] = storey;
     } else {
       this.storeys[Math.max(...Object.keys(this.storeys).map(Number)) + 1] = storey;
@@ -207,12 +213,12 @@ class HouseBuilder implements IHouseBuilder {
 
   public addBasement(area: AREA_STANDARTS): HouseBuilder {
     if (this.storeys[0]) {
-      throw new Error("This house already has a basement");
+      throw new Error('[HouseBuilder] This house already has a basement');
     }
 
     this.storeys[0] = {
-      space: AREA_STANDARTS_NAMES[this.area],
-      spaceLeft: BASE_AREA_MAP[this.area],
+      space: AREA_STANDARTS_NAMES[this.area as AREA_STANDARTS],
+      spaceLeft: BASE_AREA_MAP[this.area as AREA_STANDARTS],
       rooms: []
     };
 
@@ -223,12 +229,14 @@ class HouseBuilder implements IHouseBuilder {
     const houseStorey: TStorey = this.storeys[storey];
 
     if (!houseStorey) {
-      throw new Error("There's no such storey");
+      throw new Error('[HouseBuilder] There\'s no such storey');
     }
 
     if ((houseStorey.spaceLeft - ROOM_AREA_MAP[area]) < 0) {
-      throw new Error("Insufficient space on this storey");
+      throw new Error('[HouseBuilder] Insufficient space on this storey');
     }
+
+    const roomPrice = this.priceCalculator.calculateRoomPrice({ area, interior });
 
     const room: TRoom = {
       storey,
@@ -237,7 +245,6 @@ class HouseBuilder implements IHouseBuilder {
       type: ROOM_TYPES_NAMES[type]
     };
 
-    const roomPrice = this.priceCalculator.calculateRoomPrice(room);
 
     this.price += roomPrice;
     houseStorey.rooms.push(room);
@@ -247,21 +254,25 @@ class HouseBuilder implements IHouseBuilder {
   }
 
   public reset(): void {
-    this.area = undefined;
-    this.wallsMaterial = undefined;
-    this.roofType = undefined;
-    this.roofMaterial = undefined;
-    this.price = 0;
     this.storeys = {};
     this.rooms = [];
+    this.price = 0;
+    this.area = null;
+    this.wallsMaterial = null;
+    this.roofType = null;
+    this.roofMaterial = null;
   }
 
   public build(): THouse {
+    if (!this.isHouseBuilt()) {
+      throw new Error('[HouseBuilder] The house is not finished')
+    }
+
     const house: THouse = {
-      area: AREA_STANDARTS_NAMES[this.area],
-      wallsMaterial: WALL_MATERIALS_NAMES[this.wallsMaterial],
-      roofType: ROOF_TYPES_NAMES[this.roofType],
-      roofMaterial: ROOF_MATERIALS_NAMES[this.roofMaterial],
+      area: AREA_STANDARTS_NAMES[this.area as AREA_STANDARTS],
+      wallsMaterial: WALL_MATERIALS_NAMES[this.wallsMaterial as WALL_MATERIALS],
+      roofType: ROOF_TYPES_NAMES[this.roofType as ROOF_TYPES],
+      roofMaterial: ROOF_MATERIALS_NAMES[this.roofMaterial as ROOF_MATERIALS],
       price: this.price,
       storeys: this.storeys,
       rooms: this.rooms
@@ -270,6 +281,19 @@ class HouseBuilder implements IHouseBuilder {
     this.reset();
 
     return house;
+  }
+
+  private isHouseBuilt() {
+    return (
+      this.area
+      && this.wallsMaterial
+      && this.roofType
+      && this.roofMaterial
+      && this.storeys
+      && Object.keys(this.storeys).length
+      && this.rooms
+      && this.rooms.length
+    )
   }
 }
 
@@ -281,7 +305,12 @@ export {
   INTERIOR_WEALTH,
   ROOM_TYPES,
   AREA_STANDARTS,
+  ROOM_AREA_MAP,
+  BASE_AREA_MAP,
+  AREA_STANDARTS_NAMES,
+  INTERIOR_WEALTH_NAMES,
   TRoom,
+  TRoomOptions,
   THouse
 };
 

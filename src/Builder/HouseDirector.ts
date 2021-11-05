@@ -16,7 +16,7 @@ interface IHouseDirector {
   buildHut(): THouse,
 }
 
-class HouseDirector {
+export default class HouseDirector {
   private readonly houseBuilder: IHouseBuilder;
 
   constructor() {
